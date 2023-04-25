@@ -5,6 +5,7 @@
 
 type expr =
   | Int of int
+  | Float of float
   | Bool of bool
   | String of string
   | Ident of string
@@ -27,6 +28,7 @@ let rec un_body params = function
 let rec print oc e =
   match e with
   | Int n -> fprintf oc "%d" n
+  | Float f -> fprintf oc "%f" f
   | Bool b -> fprintf oc "%s" (if b then "T" else "F")
   | Ident s -> fprintf oc "%s" s
   | String s -> fprintf oc "\"%s\"" s

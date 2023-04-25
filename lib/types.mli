@@ -2,6 +2,7 @@ exception Error of string
 type var_name = string
 type ty =
     TInt
+  | TFloat
   | TBool
   | TString
   | TFun of (ty * ty)

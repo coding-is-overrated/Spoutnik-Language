@@ -5,12 +5,19 @@ type var_name = string ;;
 (* Types. *)
 type ty =
   | TInt
+  | TFloat
   | TBool
   | TString
   | TFun of (ty * ty)
   | TVar of var_name
   | TPair of (ty * ty)
 ;;
+
+(*
+type tyval;;
+type typaram = tyval * unité list;;
+type unité =
+*)
 
 
 (* Schémas de type. *)
@@ -38,7 +45,7 @@ let instance sch =
   let var_mapping = List.map (fun v -> (v, new_ty_var ())) (fst sch) in
   let rec rec_copy ty =
     match ty with
-    | TInt | TBool | TString -> ty
+    | TInt |TFloat | TBool | TString -> ty
     | TFun (ty1, ty2) -> TFun ((rec_copy ty1), (rec_copy ty2))
     | TPair (ty1, ty2) -> TPair ((rec_copy ty1), (rec_copy ty2))
     | TVar v_name -> (try List.assoc v_name var_mapping with Not_found -> ty) in
@@ -49,7 +56,7 @@ let instance sch =
 (* Vérifie si un nom de variable de type apparaît dans un type. *)
 let appear_in_ty v_name ty =
   let rec rec_appear = function
-    | TInt | TBool | TString -> false
+    | TInt |TFloat | TBool | TString -> false
     | TFun (ty1, ty2) | TPair (ty1, ty2) -> (rec_appear ty1) || (rec_appear ty2)
     | TVar v_name' -> v_name = v_name' in
   rec_appear ty
@@ -69,7 +76,7 @@ let trivial_sch ty = ([], ty) ;;
 (* Généralise un type par rapport à un environnement. *)
 let generalize ty env =
   let rec find_gen_vars accu = function
-    | TInt | TBool | TString -> accu
+    | TInt |TFloat | TBool | TString -> accu
     | TFun (ty1, ty2) | TPair (ty1, ty2) ->
         let accu' = find_gen_vars accu ty1 in
         find_gen_vars accu' ty2
@@ -82,6 +89,7 @@ let generalize ty env =
 (* Pretty-printer pour les types. *)
 let rec print ppf = function
   | TInt -> Printf.fprintf ppf "int"
+  |TFloat -> Printf.fprintf ppf "float"
   | TBool -> Printf.fprintf ppf "bool"
   | TString -> Printf.fprintf ppf "string"
   | TFun (t1, t2) -> Printf.fprintf ppf "(%a -> %a)" print t1 print t2

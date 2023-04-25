@@ -8,6 +8,7 @@
 %}
 
 %token <int> INT
+%token <float> FLOAT
 %token <string> IDENT
 %token TRUE FALSE
 %token <string> STRING
@@ -65,6 +66,7 @@ application:
 
 atom:
   INT            { Int($1) }
+| FLOAT          { Float($1) }
 | TRUE           { Bool(true) }
 | FALSE          { Bool(false) }
 | STRING         { String($1) }

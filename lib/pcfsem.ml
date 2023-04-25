@@ -2,6 +2,7 @@ open Pcfast;;
 
 type pcfval =
   | Intval of int
+  | Floatval of float
   | Boolval of bool
   | Stringval of string
   | Funval of { param: string; body: expr; env: environment }
@@ -13,6 +14,7 @@ and environment = (string * pcfval) list
 
 let printval = function
   | Intval n -> Printf.printf "%d" n
+  | Floatval f -> Printf.printf "%f" f
   | Boolval b -> Printf.printf "%s" (if b then "true" else "false")
   | Stringval s -> Printf.printf "%S" s
   | Funval _-> Printf.printf "<fun>"
@@ -35,6 +37,7 @@ let lookup var_name rho =
 let rec eval e rho =
   match e with
   | Int n -> Intval n
+  | Float f -> Floatval f
   | Bool b -> Boolval b
   | String s -> Stringval s
   | Ident v -> lookup v rho

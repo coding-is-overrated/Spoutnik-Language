@@ -9,7 +9,7 @@ exception Conflict of (Types.ty * Types.ty) ;;
    On recherche donc s'il n'y a pas la variable v dans le type passé en
    paramètre. *)
 let rec occur_check v_name = function
-  | Types.TInt | Types.TBool | Types.TString -> false
+  | Types.TInt |Types.TFloat | Types.TBool | Types.TString -> false
   | Types.TFun (t1, t2) | Types.TPair (t1, t2) ->
       (occur_check v_name t1) || (occur_check v_name t2)
   | Types.TVar n -> v_name = n

@@ -8,6 +8,7 @@ let rec find_id_sch idname = function
 (* Inférence du type d'une expression. *)
 let rec type_expr env = function
   | Pcfast.Int _ -> (Types.TInt, Subst.empty)
+  | Pcfast.Float _ -> (Types.TFloat, Subst.empty)
   | Pcfast.Bool _ -> (Types.TBool, Subst.empty)
   | Pcfast.String _ -> (Types.TString, Subst.empty)
   | Pcfast.Ident v -> (Types.instance (find_id_sch v env), Subst.empty)
