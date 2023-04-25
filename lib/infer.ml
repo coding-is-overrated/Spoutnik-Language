@@ -5,7 +5,7 @@ let rec find_id_sch idname = function
 ;;
 
 
-(* Inférence du type d'une expression. *)
+(* InfÃ©rence du type d'une expression. *)
 let rec type_expr env = function
   | Pcfast.Int _ -> (Types.TInt, Subst.empty)
   | Pcfast.Bool _ -> (Types.TBool, Subst.empty)
@@ -14,7 +14,7 @@ let rec type_expr env = function
   | Pcfast.If (cond_e, then_e, else_e) -> (
       (* Typage de la condition. *)
       let (cond_ty, cond_subst) = type_expr env cond_e in
-      (* Forcer le type à être bool. *)
+      (* Forcer le type Ã  Ãªtre bool. *)
       let u = Unify.unify cond_ty Types.TBool in
       (* Typage des 2 branches du if. *)
       let (then_ty, st) =
@@ -31,7 +31,7 @@ let rec type_expr env = function
           (Subst.compose se (Subst.compose st (Subst.compose u cond_subst)))))
      )
   | Pcfast.Fun (arg_name, body) ->
-      (* Nouvelle variable de type pour le paramètre de la fonction. *)
+      (* Nouvelle variable de type pour le paramï¿½tre de la fonction. *)
       let arg_ty = Types.new_ty_var () in
       (* Type et substitution du corps. *)
       let (body_ty, body_sub) =
@@ -44,20 +44,20 @@ let rec type_expr env = function
       let (e2_ty, e2_sub) = type_expr new_env' e2 in
       (e2_ty, Subst.compose e2_sub e1_sub)
   | Pcfast.Letrec (v_name, e1, e2) ->
-      (* Nouvelle variable qui deviendra le type de la fonction après l'avoir
-         unifié avec le type calculé par l'inférence pour le corps de la
-         définition. *)
+      (* Nouvelle variable qui deviendra le type de la fonction aprï¿½s l'avoir
+         unifiÃ© avec le type calculÃ© par l'infÃ©rence pour le corps de la
+         dÃ©finition. *)
       let e1_pre_ty = Types.new_ty_var () in
-      (* Nouvel environnement pour typer le corps de la définition. On ne
-         généralise pas le type temporairement donné pour la définition. *)
+      (* Nouvel environnement pour typer le corps de la dÃ©finition. On ne
+         gÃ©nÃ©ralise pas le type temporairement donnÃ© pour la dÃ©finition. *)
       let new_env = (v_name, (Types.trivial_sch e1_pre_ty)) :: env in
       let (e1_ty, e1_sub) = type_expr new_env e1 in
-      (* Il faut unifier le type supposé et le type trouvé. *)
+      (* Il faut unifier le type supposÃ© et le type trouvÃ©. *)
       let u = Unify.unify e1_pre_ty e1_ty in
       let e1_ty' = Subst.apply e1_ty u in
-      (* Maintenant il faut typer la partie 'in' dans l'environnement étendu
-         par le type finalement déterminé pour l'identificateur lié
-         récursivement. *)
+      (* Maintenant il faut typer la partie 'in' dans l'environnement ï¿½tendu
+         par le type finalement dÃ©terminÃ© pour l'identificateur liÃ©
+         rÃ©cursivement. *)
       let new_env2 = Subst.subst_env (Subst.compose u e1_sub) env in
       let new_env3 = (v_name, (Types.generalize e1_ty' new_env2)) :: new_env2 in
       let (e2_ty, e2_sub) = type_expr new_env3 e2 in
@@ -65,7 +65,7 @@ let rec type_expr env = function
   | Pcfast.App (e1, e2) ->
       let (e1_ty, e1_sub) = type_expr env e1 in
       let (e2_ty, e2_sub) = type_expr (Subst.subst_env e1_sub env) e2 in
-      (* Nouvelle variable de type. On sait que e1_ty doit être de la forme
+      (* Nouvelle variable de type. On sait que e1_ty doit Ãªtre de la forme
          t1 -> t2. Notre nouvelle variable va faire office de t2. *)
       let tmp_ty = Types.new_ty_var () in
       let e1_ty' = (Subst.apply e1_ty e2_sub) in
@@ -82,21 +82,21 @@ let rec type_expr env = function
   | Pcfast.Binop (o_name, e1, e2) -> (
       match o_name with
       | "+" | "-" | "/" | "*" ->
-          (* Typage des 2 opérandes. *)
+          (* Typage des 2 opÃ©randes. *)
           let (e1_ty, e1_sub) = type_expr env e1 in
           let (e2_ty, e2_sub) = type_expr (Subst.subst_env e1_sub env) e2 in
-          (* On les force à avoir le même type. *)
+          (* On les force Ã  avoir le mÃªme type. *)
           let u = Unify.unify e1_ty e2_ty in
           let e1_ty' = Subst.apply e1_ty u in
-          (* On force ce même type à être int. On utilise le type de l'une
-             des opérandes au pif. *)
+          (* On force ce mÃªme type Ã  Ãªtre int. On utilise le type de l'une
+             des opÃ©randes au pif. *)
           let u' = Unify.unify e1_ty' Types.TInt in
           (* On retourne int. *)
           (TInt,
            (Subst.compose u' (Subst.compose u (Subst.compose e2_sub e1_sub))))
       | "=" | ">" | ">=" | "<" | "<=" ->
-          (* Opérateurs polymorphes. La seule contrainte est que les deux
-             opérandes aient le même type. *)
+          (* OpÃ©rateurs polymorphes. La seule contrainte est que les deux
+             opÃ©randes aient le máº¿me type. *)
           let (e1_ty, e1_sub) = type_expr env e1 in
           let (e2_ty, e2_sub) = type_expr (Subst.subst_env e1_sub env)  e2 in
           let u = Unify.unify e1_ty e2_ty in
@@ -107,9 +107,9 @@ let rec type_expr env = function
   | Pcfast.Monop (o_name, e) -> (
       match o_name with
       | "-" ->
-          (* Typage de l'opérande. *)
+          (* Typage de l'opÃ©rande. *)
           let (e1_ty, e1_sub) = type_expr env e in
-          (* On force ce type à être int. *)
+          (* On force ce type Ã  Ãªtre int. *)
           let u = Unify.unify e1_ty Types.TInt in
           (* On retourne int. *)
           (TInt, (Subst.compose u e1_sub))

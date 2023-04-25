@@ -1,4 +1,4 @@
-(* Ce fichier contient la d�finition du type OCaml des arbres de
+(* Ce fichier contient la définition du type OCaml des arbres de
  * syntaxe abstraite du langage, ainsi qu'un imprimeur des phrases
  * du langage.
  *)

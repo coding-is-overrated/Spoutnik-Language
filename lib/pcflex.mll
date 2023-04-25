@@ -2,7 +2,7 @@
  open Pcfparse ;;
  exception Eoi ;;
 
-(* Emprunté de l'analyseur lexical du compilateur OCaml *)
+(* EmpruntÃ© de l'analyseur lexical du compilateur OCaml *)
 (* To buffer string literals *)
 
 let initial_string_buffer = Bytes.create 256;;
@@ -78,7 +78,7 @@ rule lex = parse
     (' ' | '\t' )
       { lex lexbuf }     (* On passe les espaces *)
   | newline
-      { (* On passe les retours à la ligne mais on garde trace de la ligne
+      { (* On passe les retours Ã  la ligne mais on garde trace de la ligne
            courante. *)
         incr_line_number lexbuf ;
         lex lexbuf }

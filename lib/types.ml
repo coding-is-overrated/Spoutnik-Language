@@ -13,7 +13,7 @@ type ty =
 ;;
 
 
-(* Schémas de type. *)
+(* SchÃ©mas de type. *)
 type sch = ((var_name list) * ty) ;;
 
 (* Environnements de typage. *)
@@ -27,13 +27,13 @@ let init_env = [
 ] ;;
 
 
-(* Génère une nouvelle variable de type. *)
+(* GÃ©nÃ¨re une nouvelle variable de type. *)
 let new_ty_var =
   let cpt = ref 0 in
   function () -> cpt := !cpt + 1 ; TVar ("t" ^ (string_of_int !cpt))
 ;;
 
-(* Retourne une instance fraîche de schéma de type. *)
+(* Retourne une instance fraÃ®che de schÃ©ma de type. *)
 let instance sch =
   let var_mapping = List.map (fun v -> (v, new_ty_var ())) (fst sch) in
   let rec rec_copy ty =
@@ -46,7 +46,7 @@ let instance sch =
 ;;
 
 
-(* Vérifie si un nom de variable de type apparaît dans un type. *)
+(* VÃ©rifie si un nom de variable de type apparaÃ®t dans un type. *)
 let appear_in_ty v_name ty =
   let rec rec_appear = function
     | TInt | TBool | TString -> false
@@ -56,17 +56,17 @@ let appear_in_ty v_name ty =
 ;;
 
 
-(* Vérifie si un nom de variable de type apparaît quelque part dans les
-   types/schémas enregistrés dans un environnement. *)
+(* VÃ©rifie si un nom de variable de type apparaÃ®t quelque part dans les
+   types/schÃ©mas enregistrÃ©s dans un environnement. *)
 let appear_in_env v_name env =
   List.exists (fun (_, sch) -> appear_in_ty v_name (snd sch)) env ;;
 
 
-(* Retourne un schéma de type trivial (pas de généralisation). *)
+(* Retourne un schÃ©ma de type trivial (pas de gÃ©nÃ©ralisation). *)
 let trivial_sch ty = ([], ty) ;;
 
 
-(* Generalise un type par rapport à un environnement. *)
+(* GÃ©nÃ©ralise un type par rapport Ã  un environnement. *)
 let generalize ty env =
   let rec find_gen_vars accu = function
     | TInt | TBool | TString -> accu
