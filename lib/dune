@@ -1,2 +1,6 @@
 (library
  (name in213))
+
+(ocamllex pcflex)
+
+(ocamlyacc pcfparse)
