@@ -2,7 +2,7 @@
  open Pcfparse ;;
  exception Eoi ;;
 
-(* Emprunté de l'analyseur lexical du compilateur OCaml *)
+(* Emprunt� de l'analyseur lexical du compilateur OCaml *)
 (* To buffer string literals *)
 
 let initial_string_buffer = Bytes.create 256;;
@@ -78,14 +78,12 @@ rule lex = parse
     (' ' | '\t' )
       { lex lexbuf }     (* On passe les espaces *)
   | newline
-      { (* On passe les retours à la ligne mais on garde trace de la ligne
+      { (* On passe les retours � la ligne mais on garde trace de la ligne
            courante. *)
         incr_line_number lexbuf ;
         lex lexbuf }
   | ['0'-'9']+ as lxm
       { INT(int_of_string lxm) }
-  | ['0'-'9']+ "." ['0'-'9']* as lxm
-      { FLOAT(float_of_string lxm) }
   | [ 'A'-'Z' 'a'-'z' ] [ 'A'-'Z' 'a'-'z' ]* as lxm
       { match lxm with
           "let" -> LET
@@ -99,11 +97,15 @@ rule lex = parse
         | "true" -> TRUE
         | "false" -> FALSE
         | _ -> IDENT(lxm) }
+  | "'" [ 'a'-'z' ] [ 'a'-'z' ]* as lxm { TYVAR lxm }
   | "="   { EQUAL }
   | ">"   { GREATER} | "<"  { SMALLER }
   | ">="  { GREATEREQUAL} | "<="  { SMALLEREQUAL }
   | "+"   { PLUS } | "-"   { MINUS } | "*" { MULT } | "/" { DIV }
+  | "."   { POINT } | "^" { POW }
   | ";;"   { SEMISEMI }
+  | ":"   { COLON }
+  | ","   { COMMA }
   | "->"  { ARROW }
   | '('   { LPAR }
   | ')'   { RPAR }

@@ -22,18 +22,19 @@ let main () =
               _ -> Printf.eprintf "Opening %s failed\n%!" name; exit 1
            )
        )
-    | _ -> usage () in
+    | _ -> usage () in (*n*)
   let lexbuf = Lexing.from_channel input_channel in
   let _ = Printf.printf "        Welcome to PCF, version %s\n%!" version in
   while true do
     try
-      let _ = Printf.printf  "> %!" in
-      let e = Pcfparse.main Pcflex.lex lexbuf in
-      let _ = Pcfast.print stdout e in
-      let _ = Printf.fprintf stdout " :\n%!" in
-      let _ = Types.print stdout (fst (Infer.type_expr Types.init_env e)) in
-      Printf.printf "\n%!";
-      let _ = Pcfsem.printval (Pcfsem.eval e) in
+      Printf.printf  "> %!" ;
+      let sentence = Pcfparse.main Pcflex.lex lexbuf in
+      Pcfast.print_topdef stdout sentence ;
+      Printf.fprintf stdout " :\n%!" ;
+      let (ty, new_env) = Infer.type_topdef !Types.init_env sentence in
+      Types.print stdout ty ;
+      (* On met à jour l'environement global de typage. *)
+      Types.init_env := new_env ;
       Printf.printf "\n%!"
     with
     | Pcflex.Eoi -> Printf.printf "Bye.\n%!" ; exit 0
@@ -60,6 +61,7 @@ let main () =
           sp.Lexing.pos_lnum
           (sp.Lexing.pos_cnum - sp.Lexing.pos_bol)
           (ep.Lexing.pos_cnum - sp.Lexing.pos_bol)
+    | Types.Error msg -> Printf.printf "Error: %s.\n" msg
   done
 ;;
 

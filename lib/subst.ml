@@ -1,5 +1,5 @@
 (* Type des substitutions. *)
-type subst =  (Types.var_name * Types.ty) list ;;
+type subst =  (Types.var_name * Types.ty_t) list ;;
 
 
 (* Substitution vide. *)
@@ -9,7 +9,7 @@ let empty = [] ;;
 let singleton var_name ty = [(var_name, ty)] ;;
 
 
-(* Applique une seule transformation � un type : c'est l'�tape �l�mentaire
+(* Applique une seule transformation à un type : c'est l'�tape �l�mentaire
    d'une substitution. *)
 let rec apply_one transf = function
   | Types.TFun (t1, t2) ->
@@ -39,7 +39,7 @@ let subst_env subst env =
 
 (* Retourne la substitution subst1 restreinte � tout ce qui n'est pas dans
    le domaine de subst2. *)
-let restrict subst1 subst2 =
+let restrict subst1 subst2 = (*rec*)
   List.filter (fun (name, _) -> not (List.mem_assoc name subst2)) subst1
 ;;
 
