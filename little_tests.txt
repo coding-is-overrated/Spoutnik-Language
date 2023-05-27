@@ -1,0 +1,14 @@
+let f a x = a * x in f;;
+
+let f a x = a + x in f;;
+
+let a = (5:int<kg>) in let f x = let y = (x:int<m^2>) in y * a in f ;;
+
+let a = (5:int<kg>) in let y = (5:int<kg>) in a = y;;
+(let a = (5 : int <kg>) in (let y = (5 : int <kg>) in (a = y))) :
+bool<1>
+
+ let a = (5:int<kg>) in let y = (5:float<kg>) in a = y;;
+(let a = (5 : int <kg>) in (let y = (5 : float <kg>) in (a = y))) :
+Error: types float<kg> and int<'u25> are incompatible
+
