@@ -12,3 +12,7 @@ bool<1>
 (let a = (5 : int <kg>) in (let y = (5 : float <kg>) in (a = y))) :
 Error: types float<kg> and int<'u25> are incompatible
 
+let f a b = a = b in f;;
+(let f b a = (a = b) in f) :
+('t10 -> ('t10 -> bool<1>))
+

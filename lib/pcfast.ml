@@ -1,11 +1,10 @@
-(* Ce fichier contient la d�finition du type OCaml des arbres de
- * syntaxe abstraite du langage, ainsi qu'un imprimeur des phrases
- * du langage.
- *)
+(** Ce fichier contient la définition du type OCaml des arbres de
+    syntaxe abstraite du langage, ainsi qu'un imprimeur des phrases
+    du langage.
+*)
 
-(*type u_expr à définir*)
 type u_expr =
-  | UE_U0
+  | UE_UOne
   | UE_Base of string
   | UE_Mul of (u_expr * u_expr)
   | UE_Div of (u_expr * u_expr)
@@ -44,7 +43,7 @@ let rec un_body params = function
   | e -> (params, e)
 
 let rec print_uexpr oc = function
-  | UE_U0 -> fprintf oc "1"
+  | UE_UOne -> fprintf oc "1"
   | UE_Base u -> fprintf oc "%s" u
   | UE_Mul (ue1, ue2) -> fprintf oc "%a.%a" print_uexpr ue1 print_uexpr ue2
   | UE_Div (ue1, ue2) -> fprintf oc "%a/%a" print_uexpr ue1 print_uexpr ue2
@@ -90,7 +89,6 @@ let print_topdef oc = function
         (fun oc -> List.iter (fun s -> fprintf oc "%s " s))
         params print_expr e
   | S_Letrec (f, e1) ->
-      (* [TODO] Tr�s laid, on r�p�te quasiment le m�me code. *)
       let params, e = un_body [] e1 in
       fprintf oc "let rec %s %a= %a" f
         (fun oc -> List.iter (fun s -> fprintf oc "%s " s))

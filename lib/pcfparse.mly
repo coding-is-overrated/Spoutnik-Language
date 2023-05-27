@@ -102,7 +102,7 @@ type_anot:
 ;
 
 core_unit:
-| SMALLER GREATER        { UE_U0 } //unit
+| SMALLER GREATER        { UE_UOne } //unit
 | SMALLER u_expr GREATER { $2 }
 ;
 

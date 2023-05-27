@@ -1,4 +1,5 @@
 (library
+ (public_name in213)
  (name in213))
 
 (ocamllex pcflex)

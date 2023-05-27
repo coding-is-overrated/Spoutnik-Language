@@ -1,25 +1,21 @@
-(* Exception pour signeler les 2 cas d'erreurs d'unification. *)
 exception TypeCycle of (Types.var_name * Types.ty_t)
 exception UnitCycle of (Types.var_name * Types.unit_t)
 exception TypeConflict of (Types.ty_t * Types.ty_t)
-exception UnitConflict of (Types.unit_t * Types.unit_t)
 
-(* Fonction qui detecte les cycles dans un probleme d'unification. Elle sert à
-   v�rifier que l'on n'a pas � unifier qqchose de la forme v et v -> v car
-   dans ce cas, il n'y a pas de solution.
-   On recherche donc s'il n'y a pas la variable v dans le type pass� en
-   param�tre. *)
+exception UnitConflict of (Types.unit_t * Types.unit_t)
+(** Exceptions pour signaler les 4 cas d'erreurs d'unification. *)
+
+(** Fonction qui détecte les cycles dans un problème d'unification pour les types.
+   Elle sert à vérifier que l'on n'a pas à unifier quelque chose de la forme v et v -> v
+   car dans ce cas, il n'y a pas de solution.
+   On recherche donc s'il n'y a pas la variable v dans le type passé en paramètre. *)
 let rec occur_check v_name = function
   | Types.TBase _ -> false
   | Types.TVar n -> v_name = n
   | Types.TFun (t1, t2) | Types.TPair (t1, t2) ->
       occur_check v_name t1 || occur_check v_name t2
 
-(* Fonction qui détecte les cycles dans un probleme d'unification. Elle sert à
-   v�rifier que l'on n'a pas � unifier qqchose de la forme v et v -> v car
-   dans ce cas, il n'y a pas de solution.
-   On recherche donc s'il n'y a pas la variable v dans le type pass� en
-   param�tre. *)
+(** Fonction qui détecte les cycles dans un problème d'unification pour les unités *)
 let rec occur_check_unit v_name = function
   | Types.UBase _ | Types.UOne -> false
   | Types.UVar n -> v_name = n
@@ -27,21 +23,14 @@ let rec occur_check_unit v_name = function
       occur_check_unit v_name u1 || occur_check_unit v_name u2
   | Types.UPow (u, _) -> occur_check_unit v_name u
 
-(* Unification de deux unités. Retourne la substitution à effectuer pour unifier les 2 unités
-   | UVar of var_name
-   | UBase of string
-   | UOne
-   | UProd of (unit_t * unit_t)
-   | UDiv of (unit_t * unit_t)
-   | UPow of (unit_t * int) *)
-
+(** Unification de deux unités. Retourne la substitution à effectuer pour unifier les 2 unités *)
 let rec unify_unit u1 u2 =
   if u1 = u2 then []
   else
     match (u1, u2) with
+    | Types.UOne, Types.UOne -> []
     | Types.UBase s1, Types.UBase s2 ->
         if s1 = s2 then [] else raise (UnitConflict (u1, u2))
-    | Types.UOne, Types.UOne -> []
     | Types.UProd (a, b), Types.UProd (c, d)
     | Types.UDiv (a, b), Types.UDiv (c, d) ->
         let s1 = unify_unit a c in
@@ -55,10 +44,12 @@ let rec unify_unit u1 u2 =
         Subst.singleton v other (*générique*)
     | _ -> raise (UnitConflict (u1, u2))
 
-(* Unification de deux types. Retourne la substitution � effectuer pour
-   unifier les 2 types.
-   La structure d'une substitution est une liste de paires (var_name, type),
-   o� chaque paire signifie "var_name" devient "type". *)
+(** Unification de deux types paramétré. Retourne la substitution à effectuer pour unifier les 2 types.
+    La structure d'une substitution est une paire de listes :
+    -   types : (var_name, ty_t) list, ou chaque paire signifie T"var_name" devient "ty_t"
+    -   units : (var_name, unit_t) list, ou chaque paire signifie U"var_name" devient "unit_t"
+
+    On unifie donc à la fois sur le type (int,float,bool etc.) et sur les unités utilisés *)
 let rec unify t1 t2 =
   if t1 = t2 then Subst.empty
   else
@@ -74,6 +65,7 @@ let rec unify t1 t2 =
         Subst.compose (unify b' d') s1
     | Types.TPair (a, b), Types.TPair (c, d) ->
         let s1 = unify a c in
+        (* s1 est la substitution nécessaire pour que a et c collent. *)
         let b' = Subst.apply b s1 in
         let d' = Subst.apply d s1 in
         Subst.compose (unify b' d') s1
