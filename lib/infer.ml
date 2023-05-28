@@ -43,6 +43,7 @@ let type_of_type_expr te =
 (** Inférence du type d'une expression. *)
 let rec type_expr env = function
   | Pcfast.E_Int _ -> (Types.type_int (), Subst.empty)
+  | Pcfast.E_Float _ -> (Types.type_float (), Subst.empty)
   | Pcfast.E_Bool _ -> (Types.type_bool (), Subst.empty)
   | Pcfast.E_String _ -> (Types.type_string (), Subst.empty)
   | Pcfast.E_Ident v -> (Types.instance (find_id_sch v env), Subst.empty)
@@ -117,7 +118,12 @@ let rec type_expr env = function
           let u = Unify.unify e1_ty e2_ty in
           let e1_ty' = Subst.apply e1_ty u in
           (* On force ce même type à être int. On utilise le type de l'une des opérandes au pif. *)
-          let u' = Unify.unify e1_ty' (Types.type_int ()) in
+          let u' =
+            match e1_ty' with
+            | TBase (("int" | "float"), _) -> Subst.empty
+            | _ -> Unify.unify e1_ty' (Types.type_float ())
+            (*par défaut float*)
+          in
           (* On retourne int. *)
           ( Subst.apply e1_ty' u',
             Subst.compose u' (Subst.compose u (Subst.compose e2_sub e1_sub)) )
@@ -127,24 +133,54 @@ let rec type_expr env = function
           let e2_ty, e2_sub = type_expr (Subst.subst_env e1_sub env) e2 in
           (* On unifie les unités *)
           let e1_ty = Subst.apply e1_ty e2_sub in
-          let u1 = Unify.unify e1_ty (Types.type_int ()) in
+          let u1 =
+            match e1_ty with
+            | TBase (("int" | "float"), _) -> Subst.empty
+            | _ -> Unify.unify e1_ty (Types.type_float ())
+            (*par défaut float*)
+          in
           let e2_ty = Subst.apply e2_ty u1 in
-          let u2 = Unify.unify e2_ty (Types.type_int ()) in
+          let u2 =
+            match e2_ty with
+            | TBase (("int" | "float"), _) -> Subst.empty
+            | _ -> Unify.unify e2_ty (Types.type_float ())
+            (*par défaut float*)
+          in
           let e1_ty' = Subst.apply e1_ty u1 in
           let e2_ty' = Subst.apply e2_ty u2 in
-          let u =
+          let t =
             match (e1_ty', e2_ty') with
-            | Types.TBase ("int", un1), Types.TBase ("int", un2) ->
-                if o_name = "*" then Types.UProd (un1, un2)
-                else Types.UDiv (un1, un2)
+            | Types.TBase ("int", un1), Types.TBase ("int", un2) -> (
+                if o_name = "*" then
+                  (*multiplication et ses règles*)
+                  match (un1, un2) with
+                  | Types.UOne, _ -> Types.TBase ("int", un2)
+                  | _, Types.UOne -> Types.TBase ("int", un1)
+                  | _ -> Types.TBase ("int", Types.UProd (un1, un2))
+                else
+                  (* division et ses règles *)
+                  match (un1, un2) with
+                  | _, Types.UOne -> Types.TBase ("int", un1)
+                  | _ -> Types.TBase ("int", Types.UDiv (un1, un2)))
+            | Types.TBase ("float", un1), Types.TBase ("float", un2) -> (
+                if o_name = "*" then
+                  (*multiplication et ses règles*)
+                  match (un1, un2) with
+                  | Types.UOne, _ -> Types.TBase ("float", un2)
+                  | _, Types.UOne -> Types.TBase ("float", un1)
+                  | _ -> Types.TBase ("float", Types.UProd (un1, un2))
+                else
+                  (* division et ses règles *)
+                  match (un1, un2) with
+                  | _, Types.UOne -> Types.TBase ("float", un1)
+                  | _ -> Types.TBase ("float", Types.UDiv (un1, un2)))
             | _ ->
                 failwith
                   "Multiplication or division applied to something other than \
-                   int"
+                   int or float or tried to multiply an int with a float"
           in
           (* On retourne int produit *)
-          ( Types.TBase ("int", u),
-            Subst.compose u2 (Subst.compose u1 (Subst.compose e2_sub e1_sub)) )
+          (t, Subst.compose u2 (Subst.compose u1 (Subst.compose e2_sub e1_sub)))
       | "=" | ">" | ">=" | "<" | "<=" ->
           (* Opérateurs polymorphes. La seule contrainte est que les deux opérandes aient le même type. *)
           let e1_ty, e1_sub = type_expr env e1 in

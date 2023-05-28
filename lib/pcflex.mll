@@ -83,6 +83,8 @@ rule lex = parse
         lex lexbuf }
   | ['0'-'9']+ as lxm
       { INT(int_of_string lxm) }
+  | ['0'-'9']+ "." ['0'-'9']* as lxm
+      { FLOAT(float_of_string lxm) }
   | [ 'A'-'Z' 'a'-'z' ] [ 'A'-'Z' 'a'-'z' ]* as lxm
       { match lxm with
           "let" -> LET

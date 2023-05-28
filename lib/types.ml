@@ -30,7 +30,12 @@ let type_var, unit_var =
         cpt := !cpt + 1;
         UVar ("u" ^ string_of_int !cpt) )
 
+let get_uvar_string = function
+  | UVar x -> x
+  | _ -> failwith "Tried to get the argument of a UVar but got something else"
+
 let type_int () = TBase ("int", unit_var ())
+let type_float () = TBase ("float", unit_var ())
 
 (* Par défaut booléens et string sans unités *)
 let type_bool () = TBase ("bool", UOne)
@@ -49,7 +54,22 @@ type env_t = (string * sch_t) list
 let init_env : (string * (string list * ty_t)) list ref =
   ref
     [
-      ("true", ([], TBase ("bool", UOne))); ("false", ([], TBase ("bool", UOne)));
+      ("true", ([], TBase ("bool", UOne)));
+      ("false", ([], TBase ("bool", UOne)));
+      ( "squarert",
+        let units = unit_var () in
+        ( [ get_uvar_string units ],
+          TFun (TBase ("float", UPow (units, 2)), TBase ("float", units)) ) );
+      ( "sqroot",
+        let units = unit_var () in
+        ( [ get_uvar_string units ],
+          TFun (TBase ("float", UProd (units, units)), TBase ("float", units))
+        ) );
+      ("ln", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
+      ("exp", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
+      ("sin", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
+      ("cos", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
+      ("tan", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
     ]
 
 (* Retourne une instance fraîche de schéma de type. *)

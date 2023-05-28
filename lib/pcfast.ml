@@ -18,6 +18,7 @@ type tyexpr =
 
 type expr =
   | E_Int of int
+  | E_Float of float
   | E_Bool of bool
   | E_String of string
   | E_Ident of string
@@ -57,6 +58,7 @@ let rec print_texpr oc = function
 
 let rec print_expr oc = function
   | E_Int n -> fprintf oc "%d" n
+  | E_Float f -> fprintf oc "%f" f
   | E_Bool b -> fprintf oc "%s" (if b then "true" else "false")
   | E_Ident s -> fprintf oc "%s" s
   | E_String s -> fprintf oc "\"%s\"" s

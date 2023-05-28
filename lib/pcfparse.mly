@@ -8,6 +8,7 @@ let rec body params expr = match params with
 %}
 
 %token <int> INT
+%token <float> FLOAT
 %token <string> IDENT
 %token <string> TYVAR
 %token TRUE FALSE
@@ -81,6 +82,7 @@ application:
 
 atom:
   INT            { E_Int $1 }
+| FLOAT          { E_Float $1 }
 | TRUE           { E_Bool true }
 | FALSE          { E_Bool false }
 | STRING         { E_String $1 }
