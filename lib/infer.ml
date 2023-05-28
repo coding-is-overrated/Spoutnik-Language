@@ -161,7 +161,9 @@ let rec type_expr env = function
                   (* division et ses règles *)
                   match (un1, un2) with
                   | _, Types.UOne -> Types.TBase ("int", un1)
-                  | _ -> Types.TBase ("int", Types.UDiv (un1, un2)))
+                  | u, u_ ->
+                      if u = u_ then Types.TBase ("int", Types.UOne)
+                      else Types.TBase ("int", Types.UDiv (un1, un2)))
             | Types.TBase ("float", un1), Types.TBase ("float", un2) -> (
                 if o_name = "*" then
                   (*multiplication et ses règles*)
@@ -173,7 +175,9 @@ let rec type_expr env = function
                   (* division et ses règles *)
                   match (un1, un2) with
                   | _, Types.UOne -> Types.TBase ("float", un1)
-                  | _ -> Types.TBase ("float", Types.UDiv (un1, un2)))
+                  | u, u_ ->
+                      if u = u_ then Types.TBase ("float", Types.UOne)
+                      else Types.TBase ("float", Types.UDiv (un1, un2)))
             | _ ->
                 failwith
                   "Multiplication or division applied to something other than \
@@ -195,9 +199,13 @@ let rec type_expr env = function
           (* Typage de l'op�rande. *)
           let e1_ty, e1_sub = type_expr env e in
           (* On force ce type � �tre int. *)
-          let u = Unify.unify e1_ty (Types.type_int ()) in
-          (* On retourne int. *)
-          (Types.type_int (), Subst.compose u e1_sub)
+          let u =
+            match e1_ty with
+            | TBase (("int" | "float"), _) -> Subst.empty
+            | _ -> Unify.unify e1_ty (Types.type_float ())
+            (*par défaut float*)
+          in
+          (Subst.apply e1_ty u, Subst.compose u e1_sub)
       | _ -> failwith "Unknown monop")
   | Pcfast.E_Pair (e1, e2) ->
       let e1_ty, e1_sub = type_expr env e1 in

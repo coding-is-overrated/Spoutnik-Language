@@ -33,6 +33,9 @@ let main () =
       let sentence = Pcfparse.main Pcflex.lex lexbuf in
       Pcfast.print_topdef stdout sentence;
       Printf.fprintf stdout " :\n%!";
+      (* Ajouter sémantique *)
+      let _ = Pcfsem.printval stdout (Pcfsem.eval_sentence sentence) in
+      Printf.printf "\n%!";
       let ty, new_env = Infer.type_topdef !Types.init_env sentence in
       Types.print stdout ty;
       (* On met à jour l'environement global de typage. *)
