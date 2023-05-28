@@ -40,11 +40,10 @@ topdef:
 | LET IDENT seqident EQUAL expr       { S_Let ($2, (body $3 $5)) }
 ;
 
+
 expr:
-| LETREC IDENT seqident EQUAL expr IN expr
-    { E_Letrec ($2, (body $3 $5), $7) }
-| LET REC IDENT seqident EQUAL expr IN expr
-    { E_Letrec ($3, (body $4 $6), $8) }
+| LETREC IDENT seqident EQUAL expr IN expr    { E_Letrec ($2, (body $3 $5), $7) }
+| LET REC IDENT seqident EQUAL expr IN expr   { E_Letrec ($3, (body $4 $6), $8) }
 | LET IDENT seqident EQUAL expr IN expr       { E_Let ($2, (body $3 $5) , $7) }
 | FUN IDENT ARROW expr                        { E_Fun ($2, $4) }
 | IF expr THEN expr ELSE expr                 { E_If ($2, $4, $6) }

@@ -32,7 +32,7 @@ let rec printval oc = function
   | Funrecval _ -> Printf.fprintf oc "<fun rec>"
   | Pairval (a, b) -> Printf.fprintf oc "(%a * %a)" printval a printval b
 
-(* Environnement. *)
+(** Environnement initial auquel on a rajouté des définitions au choix *)
 let init_env =
   [
     ( "squarert",
