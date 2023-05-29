@@ -1,5 +1,5 @@
 {
- open Pcfparse ;;
+ open Parser ;;
  exception Eoi ;;
 
 (* Emprunté de l'analyseur lexical du compilateur OCaml *)
@@ -85,7 +85,7 @@ rule lex = parse
       { INT(int_of_string lxm) }
   | ['0'-'9']+ "." ['0'-'9']* as lxm
       { FLOAT(float_of_string lxm) }
-  | [ 'A'-'Z' 'a'-'z' ] [ 'A'-'Z' 'a'-'z' ]* as lxm
+  | [ 'A'-'Z' 'a'-'z' ] [ 'A'-'Z' 'a'-'z' '0'-'9' ]* as lxm
       { match lxm with
           "let" -> LET
         | "rec" -> REC
@@ -110,6 +110,7 @@ rule lex = parse
   | "->"  { ARROW }
   | '('   { LPAR }
   | ')'   { RPAR }
+  | '_'   { UNDERSCORE }
   | '"'   { reset_string_buffer();
             in_string lexbuf;
             STRING (get_stored_string()) }

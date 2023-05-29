@@ -1,4 +1,4 @@
 (executable
- (public_name in213)
+ (public_name spoutnik)
  (name main)
- (libraries in213))
+ (libraries spoutnik))

@@ -88,7 +88,12 @@ let compose_unit theta2 theta1 =
 (** Composition de 2 substitutions complète (types et units).
    Retourne une nouvelle substitution theta2 rond theta1. *)
 let compose theta2 theta1 =
+  let compu = compose_unit theta2.units theta1.units in
+  let compt = compose_type theta2.types theta1.types in
   {
-    types = compose_type theta2.types theta1.types;
-    units = compose_unit theta2.units theta1.units;
+    types =
+      List.map (fun (v, t) -> (v, apply t { types = []; units = compu })) compt;
+    (* Parce que les types contiennent des unités *)
+    (* Peut-être pas optimal mais permet d'assurer une inférence correcte *)
+    units = compu;
   }

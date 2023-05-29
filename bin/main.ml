@@ -1,11 +1,13 @@
-open In213
+open Spoutnik
 
-let version = "0.01"
+let version = "1.0"
 
 let usage () =
   let _ =
     Printf.eprintf
-      "Usage: %s [file]\n\tRead a PCF program from file (default is stdin)\n%!"
+      "Usage: %s [file]\n\
+       \tRead a Spoutnik program from file (default is stdin)\n\
+       %!"
       Sys.argv.(0)
   in
   exit 1
@@ -26,15 +28,18 @@ let main () =
   in
   (*n*)
   let lexbuf = Lexing.from_channel input_channel in
-  let _ = Printf.printf "        Welcome to PCF, version %s\n%!" version in
+  let _ = Printf.printf "        Welcome to Spoutnik, version %s\n%!" version in
+  let rho = ref Semantics.init_env in
   while true do
     try
       Printf.printf "> %!";
-      let sentence = Pcfparse.main Pcflex.lex lexbuf in
-      Pcfast.print_topdef stdout sentence;
+      let sentence = Parser.main Lexer.lex lexbuf in
+      Ast.print_topdef stdout sentence;
       Printf.fprintf stdout " :\n%!";
       (* Ajouter sémantique *)
-      let _ = Pcfsem.printval stdout (Pcfsem.eval_sentence sentence) in
+      let _ =
+        Semantics.printval stdout (Semantics.eval_sentence sentence rho)
+      in
       Printf.printf "\n%!";
       let ty, new_env = Infer.type_topdef !Types.init_env sentence in
       Types.print stdout ty;
@@ -42,7 +47,7 @@ let main () =
       Types.init_env := new_env;
       Printf.printf "\n%!"
     with
-    | Pcflex.Eoi ->
+    | Lexer.Eoi ->
         Printf.printf "Bye.\n%!";
         exit 0
     | Failure msg -> Printf.printf "Error: %s\n\n" msg
@@ -65,7 +70,7 @@ let main () =
           sp.Lexing.pos_fname sp.Lexing.pos_lnum
           (sp.Lexing.pos_cnum - sp.Lexing.pos_bol)
           (ep.Lexing.pos_cnum - sp.Lexing.pos_bol)
-    | Pcflex.LexError (sp, ep) ->
+    | Lexer.LexError (sp, ep) ->
         Printf.printf "File %S, line %i, characters %i-%i: Lexical error.\n"
           sp.Lexing.pos_fname sp.Lexing.pos_lnum
           (sp.Lexing.pos_cnum - sp.Lexing.pos_bol)

@@ -1,46 +1,29 @@
-open Pcfast
+open Ast
 
 (** Définition des types *)
-type pcfval =
+type value =
   | Intval of int
   | Floatval of float
   | Boolval of bool
   | Stringval of string
-  | Funval of (pcfval -> pcfval)
-  (*{ param : string; body : expr; env : environment }*)
-  (* pcfval -> pcfval *)
-  | Funrecval of {
-      fname : string;
-      param : string;
-      body : expr;
-      env : environment;
-    }
-  | Pairval of pcfval * pcfval
+  | Funval of (value -> value)
+  | Pairval of value * value
 
-(* { param : string; body : expr; env : environment }
-   fun v -> eval expr (extend env param v)
-*)
-and environment = (string * pcfval) list
+and environment = (string * value) list
 
 (** Pretty-printer pour les valeurs *)
 let rec printval oc = function
   | Intval n -> Printf.fprintf oc "%d" n
-  | Floatval x -> Printf.fprintf oc "%f" x
+  | Floatval x -> Printf.fprintf oc "%F" x
   | Boolval b -> Printf.fprintf oc "%s" (if b then "true" else "false")
   | Stringval s -> Printf.fprintf oc "%S" s
   | Funval _ -> Printf.fprintf oc "<fun>"
-  | Funrecval _ -> Printf.fprintf oc "<fun rec>"
   | Pairval (a, b) -> Printf.fprintf oc "(%a * %a)" printval a printval b
 
-(** Environnement initial auquel on a rajouté des définitions au choix *)
+(** Environnement initial auquel on a rajouté la librairie standard *)
 let init_env =
   [
-    ( "squarert",
-      Funval
-        (function
-        | Floatval f -> Floatval (Float.sqrt f) | _ -> failwith "unreachable")
-    );
-    ( "sqroot",
+    ( "sqrt",
       Funval
         (function
         | Floatval f -> Floatval (Float.sqrt f) | _ -> failwith "unreachable")
@@ -64,7 +47,12 @@ let init_env =
     ( "tan",
       Funval
         (function
-        | Floatval f -> Floatval (Float.log f) | _ -> failwith "unreachable") );
+        | Floatval f -> Floatval (Float.tan f) | _ -> failwith "unreachable") );
+    ( "print",
+      Funval
+        (fun v ->
+          Printf.printf "%a\n%!" printval v;
+          Intval 0) );
   ]
 
 let error msg = raise (Failure msg)
@@ -85,10 +73,6 @@ let rec eval e rho =
   | E_App (e1, e2) -> (
       match (eval e1 rho, eval e2 rho) with
       | Funval f, v2 -> f v2
-      | (Funrecval { fname; param; body; env } as fval), v2 ->
-          let rho1 = extend env fname fval in
-          let rho2 = extend rho1 param v2 in
-          eval body rho2
       | _, _ -> error "Apply a non-function")
   | E_Monop (op, e) -> (
       match op with
@@ -112,11 +96,10 @@ let rec eval e rho =
           error "Arithmetic on non-integers or non-float"
       | "<", Intval n1, Intval n2 -> Boolval (n1 < n2)
       | ">", Intval n1, Intval n2 -> Boolval (n1 > n2)
-      | "=", Intval n1, Intval n2 -> Boolval (n1 = n2)
+      | "=", n1, n2 -> Boolval (n1 = n2)
       | "<=", Intval n1, Intval n2 -> Boolval (n1 <= n2)
       | ">=", Intval n1, Intval n2 -> Boolval (n1 >= n2)
-      | ("<" | ">" | "=" | "<=" | ">="), _, _ ->
-          error "Comparison of non-integers"
+      | ("<" | ">" | "<=" | ">="), _, _ -> error "Comparison of non-integers"
       | _ -> error (Printf.sprintf "Unknown binary op: %s" op))
   | E_If (e, e1, e2) -> (
       match eval e rho with
@@ -127,9 +110,9 @@ let rec eval e rho =
       let v1 = eval e1 rho in
       let rho1 = extend rho x v1 in
       eval e2 rho1
-  | E_Letrec (f, E_Fun (x, e1), e2) ->
-      let fval = Funrecval { fname = f; param = x; body = e1; env = rho } in
-      let rho1 = extend rho f fval in
+  | E_Letrec (f_name, E_Fun (x, e1), e2) ->
+      let rec f v = eval e1 (extend (extend rho f_name (Funval f)) x v) in
+      let rho1 = extend rho f_name (Funval f) in
       eval e2 rho1
   | E_Letrec (_, _, _) -> error "Cannot use the rec flag on non function value"
   | E_Pair (a, b) -> Pairval (eval a rho, eval b rho)
@@ -138,9 +121,14 @@ let rec eval e rho =
 (** Evaluation wrapper top_def *)
 let eval_sentence s rho =
   match s with
-  | S_Expr e -> eval e rho
-  | S_Let (_, e) -> eval e rho
-  | S_Letrec (_, e) -> eval e rho
+  | S_Expr e -> eval e !rho
+  | S_Let (x, e) ->
+      let v = eval e !rho in
+      rho := extend !rho x v;
+      v
+  | S_Letrec (f_name, e) ->
+      let v = eval (E_Letrec (f_name, e, E_Ident f_name)) !rho in
+      rho := extend !rho f_name v;
+      v
 
 let eval e = eval e init_env
-let eval_sentence s = eval_sentence s init_env

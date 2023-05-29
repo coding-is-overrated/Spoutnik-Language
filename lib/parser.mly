@@ -1,10 +1,37 @@
 %{
-open Pcfast ;;
+open Ast ;;
 
-let rec body params expr = match params with
-  | [] -> expr
-  | p :: prms -> E_Fun (p, body prms expr)
-;;
+type arg = Raw of string | Annotated of string * tyexpr
+
+let rec body params ret_anot expr = match params with
+  | [] -> (match ret_anot with | None -> expr | Some t -> E_Tyannot (expr, t))
+  | Raw p :: prms -> E_Fun (p, body prms ret_anot expr)
+  | Annotated (p, ty) :: prms -> E_Fun (p,
+    E_Let (p, 
+      E_Tyannot (E_Ident p, ty),
+      body prms ret_anot expr
+    ))
+
+let body_rec f_name params ret_anot expr = 
+let te_var () = let t = Types.type_var () in TE_Var (Types.get_tvar_string t) in
+match ret_anot with
+| None -> failwith "recursive definitions must have a return type annotation"
+| Some t -> match params with
+  | [] -> failwith "recursive definitions must be functional"
+  | Raw p :: prms -> E_Fun (p,
+    E_Let (f_name,
+      E_Tyannot (E_Ident f_name, TE_Fun (te_var (), t)),
+      body prms ret_anot expr
+    ))
+  | Annotated (p, ty) :: prms -> E_Fun (p,
+    E_Let (f_name,
+      E_Tyannot (E_Ident f_name, TE_Fun (te_var (), t)),
+      E_Let (p,
+        E_Tyannot (E_Ident p, ty),
+        body prms ret_anot expr
+      )
+    ))
+
 %}
 
 %token <int> INT
@@ -14,7 +41,7 @@ let rec body params expr = match params with
 %token TRUE FALSE
 %token <string> STRING
 %token PLUS MINUS MULT DIV EQUAL GREATER SMALLER GREATEREQUAL SMALLEREQUAL POINT POW
-%token LPAR RPAR SEMISEMI COMMA COLON
+%token LPAR RPAR SEMISEMI COMMA COLON UNDERSCORE
 %token LET REC LETREC IN FUN ARROW
 %token IF THEN ELSE
 
@@ -25,7 +52,7 @@ let rec body params expr = match params with
 %left MULT DIV
 
 %start main
-%type <Pcfast.sentence> main
+%type <Ast.sentence> main
 
 %%
 
@@ -35,22 +62,25 @@ main:
 ;
 
 topdef:
-| LETREC IDENT seqident EQUAL expr    { S_Letrec ($2, (body $3 $5)) }
-| LET REC IDENT seqident EQUAL expr   { S_Letrec ($3, (body $4 $6)) }
-| LET IDENT seqident EQUAL expr       { S_Let ($2, (body $3 $5)) }
+| LETREC IDENT seqident return_anot EQUAL expr    { S_Letrec ($2, (body_rec $2 $3 $4 $6)) }
+| LET REC IDENT seqident return_anot EQUAL expr   { S_Letrec ($3, (body_rec $3 $4 $5 $7)) }
+| LET IDENT seqident return_anot EQUAL expr       { S_Let ($2, (body $3 $4 $6)) }
 ;
 
-
 expr:
-| LETREC IDENT seqident EQUAL expr IN expr    { E_Letrec ($2, (body $3 $5), $7) }
-| LET REC IDENT seqident EQUAL expr IN expr   { E_Letrec ($3, (body $4 $6), $8) }
-| LET IDENT seqident EQUAL expr IN expr       { E_Let ($2, (body $3 $5) , $7) }
+| LETREC IDENT seqident return_anot EQUAL expr IN expr    { E_Letrec ($2, (body_rec $2 $3 $4 $6), $8) }
+| LET REC IDENT seqident return_anot EQUAL expr IN expr   { E_Letrec ($3, (body_rec $3 $4 $5 $7), $9) }
+| LET IDENT seqident return_anot EQUAL expr IN expr       { E_Let ($2, (body $3 $4 $6), $8) }
 | FUN IDENT ARROW expr                        { E_Fun ($2, $4) }
 | IF expr THEN expr ELSE expr                 { E_If ($2, $4, $6) }
 | arith_expr                                  { $1 }
 | LPAR expr COMMA expr RPAR                   { E_Pair ($2, $4) }
 | LPAR expr COLON type_anot RPAR              { E_Tyannot ($2, $4) }
 ;
+
+return_anot:
+| /* empty */ { None }
+| COLON type_anot { Some $2 }
 
 arith_expr:
   application                        { $1 }
@@ -90,7 +120,8 @@ atom:
 ;
 
 seqident:
-  IDENT seqident  { $1 :: $2 }
+| IDENT seqident  { Raw $1 :: $2 }
+| LPAR IDENT COLON type_anot RPAR seqident { Annotated ($2, $4) :: $6 }
 | /* rien */      { [ ] }
 ;
 
@@ -98,7 +129,7 @@ type_anot:
 | TYVAR                               { TE_Var $1 }
 | IDENT core_unit                     { TE_Basic ($1,$2) }
 | LPAR type_anot MULT type_anot RPAR  { TE_Pair ($2, $4) }
-| type_anot ARROW type_anot           { TE_Fun ($1, $3) }
+| LPAR type_anot ARROW type_anot RPAR { TE_Fun ($2, $4) }
 | LPAR type_anot RPAR                 { $2 }
 ;
 

@@ -34,6 +34,10 @@ let get_uvar_string = function
   | UVar x -> x
   | _ -> failwith "Tried to get the argument of a UVar but got something else"
 
+let get_tvar_string = function
+  | TVar x -> x
+  | _ -> failwith "Tried to get the argument of a UVar but got something else"
+
 let type_int () = TBase ("int", unit_var ())
 let type_float () = TBase ("float", unit_var ())
 
@@ -56,20 +60,18 @@ let init_env : (string * (string list * ty_t)) list ref =
     [
       ("true", ([], TBase ("bool", UOne)));
       ("false", ([], TBase ("bool", UOne)));
-      ( "squarert",
+      ( "sqrt",
         let units = unit_var () in
         ( [ get_uvar_string units ],
           TFun (TBase ("float", UPow (units, 2)), TBase ("float", units)) ) );
-      ( "sqroot",
-        let units = unit_var () in
-        ( [ get_uvar_string units ],
-          TFun (TBase ("float", UProd (units, units)), TBase ("float", units))
-        ) );
       ("ln", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
       ("exp", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
       ("sin", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
       ("cos", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
       ("tan", ([], TFun (TBase ("float", UOne), TBase ("float", UOne))));
+      ( "print",
+        let types = type_var () in
+        ([ get_tvar_string types ], TFun (types, TBase ("int", UOne))) );
     ]
 
 (* Retourne une instance fraîche de schéma de type. *)

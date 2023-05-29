@@ -1,7 +1,7 @@
 (library
- (public_name in213)
- (name in213))
+ (public_name spoutnik)
+ (name spoutnik))
 
-(ocamllex pcflex)
+(ocamllex lexer)
 
-(ocamlyacc pcfparse)
+(ocamlyacc parser)
