@@ -6,9 +6,6 @@ print "Spoutnik, fact(5) = ";;
 print (fact 5);;
 print "\n";;
 
-// this produces an error because units are ill formed
-let bad_func x = x + sqrt(x) ;;
-
 let almost_pi:float<> = 3.14;;
 
 let mystic 
@@ -19,3 +16,5 @@ let mystic
 
 // all of those produce unit errors
 let a = (5:int<kg>) in let y = (5:float<kg>) in a = y;;
+
+let bad_func x = x + sqrt(x) ;;

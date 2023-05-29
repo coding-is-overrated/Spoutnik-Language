@@ -54,9 +54,9 @@ let rec apply ty subst =
 
 (** Applique une substitution à tous les types d'un environnement de typage
    et retourne le nouvel environnement. *)
-let subst_env subst env =
+let subst_env subst env : Types.env_t =
   List.map
-    (fun (name, (gen_vars, ty)) -> (name, (gen_vars, apply ty subst)))
+    (fun (name, (tvars, uvars, ty)) -> (name, (tvars, uvars, apply ty subst)))
     env
 
 (** Retourne la substitution subst1 restreinte à tout ce qui n'est pas dans
