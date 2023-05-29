@@ -58,10 +58,10 @@ let rec print_texpr oc = function
 
 let rec print_expr oc = function
   | E_Int n -> fprintf oc "%d" n
-  | E_Float f -> fprintf oc "%f" f
+  | E_Float f -> fprintf oc "%F" f
   | E_Bool b -> fprintf oc "%s" (if b then "true" else "false")
   | E_Ident s -> fprintf oc "%s" s
-  | E_String s -> fprintf oc "\"%s\"" s
+  | E_String s -> fprintf oc "%S" s
   | E_App (e1, e2) -> fprintf oc "(%a %a)" print_expr e1 print_expr e2
   | E_Let (f, e1, e2) ->
       let params, e = un_body [] e1 in

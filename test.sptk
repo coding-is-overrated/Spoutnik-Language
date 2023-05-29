@@ -1,0 +1,21 @@
+let a: int<burger> = 3;;
+
+let rec fact x: int<> = if x = 0 then 1 else x * fact (x - 1);;
+
+print "Spoutnik, fact(5) = ";;
+print (fact 5);;
+print "\n";;
+
+// this produces an error because units are ill formed
+let bad_func x = x + sqrt(x) ;;
+
+let almost_pi:float<> = 3.14;;
+
+let mystic 
+    (a:float<(m.m^2.m.m^2.m.s^5)/(m^7.s.s)>)
+    (b:float<s^3>)
+    (c:float<baldeagle^2>)
+    : float<baldeagle> = sqrt(c)*a/b*cos(almost_pi) ;;
+
+// all of those produce unit errors
+let a = (5:int<kg>) in let y = (5:float<kg>) in a = y;;

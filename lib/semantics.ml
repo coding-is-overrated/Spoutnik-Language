@@ -18,7 +18,11 @@ let rec printval oc = function
   | Boolval b -> Printf.fprintf oc "%s" (if b then "true" else "false")
   | Stringval s -> Printf.fprintf oc "%S" s
   | Funval _ -> Printf.fprintf oc "<fun>"
-  | Pairval (a, b) -> Printf.fprintf oc "(%a * %a)" printval a printval b
+  | Pairval (a, b) -> Printf.fprintf oc "(%a, %a)" printval a printval b
+
+let raw_print oc = function
+  | Stringval s -> Printf.fprintf oc "%s" s
+  | any -> Printf.fprintf oc "%a" printval any
 
 (** Environnement initial auquel on a rajouté la librairie standard *)
 let init_env =
@@ -51,7 +55,7 @@ let init_env =
     ( "print",
       Funval
         (fun v ->
-          Printf.printf "%a\n%!" printval v;
+          Printf.printf "%a%!" raw_print v;
           Intval 0) );
   ]
 

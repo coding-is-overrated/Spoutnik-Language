@@ -49,7 +49,8 @@ match ret_anot with
 %right ARROW            /* -> expressions de types */
 %left EQUAL GREATER SMALLER GREATEREQUAL SMALLEREQUAL
 %left PLUS MINUS
-%left MULT DIV
+%left MULT DIV POINT
+%left POW
 
 %start main
 %type <Ast.sentence> main
@@ -142,5 +143,6 @@ u_expr:
 | IDENT               { UE_Base $1 }
 | u_expr POINT u_expr { UE_Mul ($1, $3) }
 | u_expr DIV u_expr   { UE_Div ($1, $3) }
+| u_expr POW MINUS INT { UE_Pow ($1, -($4)) }
 | u_expr POW INT      { UE_Pow ($1, $3) } //uniquement puissances entières reconnues
 | LPAR u_expr RPAR    { $2 }

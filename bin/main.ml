@@ -12,43 +12,72 @@ let usage () =
   in
   exit 1
 
+let interactive = ref true
+let debug = ref false
+
 let main () =
   let input_channel =
     match Array.length Sys.argv with
     | 1 -> stdin
     | 2 -> (
         match Sys.argv.(1) with
-        | "-" -> stdin
+        | "-d" | "--debug" ->
+            debug := true;
+            stdin
         | name -> (
+            interactive := false;
             try open_in name
             with _ ->
               Printf.eprintf "Opening %s failed\n%!" name;
               exit 1))
+    | 3 -> (
+        match (Sys.argv.(1), Sys.argv.(2)) with
+        | ("-d" | "--debug"), ("-d" | "--debug") ->
+            debug := true;
+            stdin
+        | ("-d" | "--debug"), name | name, ("-d" | "--debug") -> (
+            debug := true;
+            interactive := false;
+            try open_in name
+            with _ ->
+              Printf.eprintf "Opening %s failed\n%!" name;
+              exit 1)
+        | _ -> usage ())
     | _ -> usage ()
   in
   (*n*)
   let lexbuf = Lexing.from_channel input_channel in
-  let _ = Printf.printf "        Welcome to Spoutnik, version %s\n%!" version in
+  let _ =
+    if !interactive then
+      Printf.printf "%!        Welcome to Spoutnik, version %s\n%!" version
+  in
   let rho = ref Semantics.init_env in
   while true do
     try
-      Printf.printf "> %!";
+      if !interactive then Printf.printf "> %!";
       let sentence = Parser.main Lexer.lex lexbuf in
-      Ast.print_topdef stdout sentence;
-      Printf.fprintf stdout " :\n%!";
-      (* Ajouter sémantique *)
-      let _ =
-        Semantics.printval stdout (Semantics.eval_sentence sentence rho)
+      let () =
+        if !debug then (
+          Ast.print_topdef stdout sentence;
+          Printf.fprintf stdout "\n%!")
       in
-      Printf.printf "\n%!";
+
       let ty, new_env = Infer.type_topdef !Types.init_env sentence in
-      Types.print stdout ty;
+      let value = Semantics.eval_sentence sentence rho in
+
+      let () =
+        if !interactive || !debug then (
+          if !debug then Printf.printf "\n%!";
+          Semantics.printval stdout value;
+          Printf.printf ": %!";
+          Types.print stdout ty;
+          Printf.printf "\n%!")
+      in
       (* On met à jour l'environement global de typage. *)
-      Types.init_env := new_env;
-      Printf.printf "\n%!"
+      Types.init_env := new_env
     with
     | Lexer.Eoi ->
-        Printf.printf "Bye.\n%!";
+        if !interactive then Printf.printf "Bye.\n%!";
         exit 0
     | Failure msg -> Printf.printf "Error: %s\n\n" msg
     | Unify.TypeCycle (v_name, ty) ->
